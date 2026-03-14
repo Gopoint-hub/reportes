@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reporte GRÖNER — Meta Ads</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f1117; color: #e0e0e0; }
+    .header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); padding: 2rem; text-align: center; border-bottom: 3px solid #e94560; }
+    .header h1 { font-size: 2rem; color: #fff; letter-spacing: 2px; }
+    .header p { color: #aaa; margin-top: 0.5rem; }
+    .tabs { display: flex; justify-content: center; gap: 0.5rem; padding: 1rem; background: #161922; }
+    .tab { padding: 0.6rem 1.5rem; border: 1px solid #333; border-radius: 8px; background: transparent; color: #aaa; cursor: pointer; font-size: 0.9rem; transition: all 0.2s; }
+    .tab.active { background: #e94560; color: #fff; border-color: #e94560; }
+    .tab:hover { border-color: #e94560; color: #fff; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 1.5rem; }
+    .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+    .kpi { background: #1a1d28; border-radius: 12px; padding: 1.2rem; text-align: center; border: 1px solid #2a2d38; }
+    .kpi .value { font-size: 1.8rem; font-weight: 700; color: #e94560; }
+    .kpi .label { font-size: 0.8rem; color: #888; margin-top: 0.3rem; text-transform: uppercase; letter-spacing: 1px; }
+    .kpi.green .value { color: #4ade80; }
+    .kpi.blue .value { color: #60a5fa; }
+    .kpi.yellow .value { color: #fbbf24; }
+    .kpi.purple .value { color: #a78bfa; }
+    .charts { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem; }
+    .chart-card { background: #1a1d28; border-radius: 12px; padding: 1.5rem; border: 1px solid #2a2d38; }
+    .chart-card h3 { color: #fff; margin-bottom: 1rem; font-size: 1rem; }
+    .chart-card.full { grid-column: 1 / -1; }
+    .analysis { background: #1a1d28; border-radius: 12px; padding: 2rem; border: 1px solid #2a2d38; margin-bottom: 2rem; }
+    .analysis h2 { color: #e94560; margin-bottom: 1rem; }
+    .analysis h3 { color: #60a5fa; margin: 1.2rem 0 0.5rem; }
+    .analysis p, .analysis li { color: #ccc; line-height: 1.7; }
+    .analysis ul { padding-left: 1.5rem; }
+    .table-wrap { overflow-x: auto; margin-bottom: 2rem; }
+    table { width: 100%; border-collapse: collapse; background: #1a1d28; border-radius: 12px; overflow: hidden; }
+    th { background: #252836; color: #e94560; padding: 0.8rem; text-align: left; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; }
+    td { padding: 0.8rem; border-top: 1px solid #2a2d38; font-size: 0.9rem; }
+    tr:hover td { background: #20232e; }
+    .badge { display: inline-block; padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600; }
+    .badge.top { background: #064e3b; color: #4ade80; }
+    .badge.mid { background: #422006; color: #fbbf24; }
+    .badge.low { background: #450a0a; color: #f87171; }
+    .footer { text-align: center; padding: 2rem; color: #555; font-size: 0.8rem; }
+    @media (max-width: 768px) { .charts { grid-template-columns: 1fr; } .kpis { grid-template-columns: repeat(2, 1fr); } }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <h1>GRÖNER</h1>
+  <p>Reporte de rendimiento Meta Ads — Cuenta act_197091558657333</p>
+</div>
+
+<div class="tabs">
+  <button class="tab active" onclick="switchTab('all')">Vista Completa</button>
+  <button class="tab" onclick="switchTab('2025')">2025</button>
+  <button class="tab" onclick="switchTab('2026')">2026</button>
+  <button class="tab" onclick="switchTab('active')">Campañas Activas</button>
+</div>
+
+<div class="container">
+  <div class="kpis" id="kpis"></div>
+  <div class="charts">
+    <div class="chart-card full"><h3>Evolución Mensual — Inversión y Compras</h3><canvas id="chartEvolution"></canvas></div>
+    <div class="chart-card"><h3>ROAS Mensual</h3><canvas id="chartRoas"></canvas></div>
+    <div class="chart-card"><h3>CPA Mensual (CLP)</h3><canvas id="chartCpa"></canvas></div>
+    <div class="chart-card full"><h3>CTR y CPC Mensual</h3><canvas id="chartCtrCpc"></canvas></div>
+  </div>
+
+  <div id="activeSection" style="display:none;">
+    <h2 style="color:#fff; margin-bottom:1rem;">Rendimiento Campañas Activas (Últimos 30 días)</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Campaña</th><th>Inversión</th><th>Impr.</th><th>Clicks</th><th>CTR</th><th>Compras</th><th>CPA</th><th>ROAS</th><th>Rating</th></tr></thead>
+        <tbody id="campTable"></tbody>
+      </table>
+    </div>
+    <h2 style="color:#fff; margin:2rem 0 1rem;">Rendimiento por Ad (Últimos 30 días)</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Ad</th><th>Campaña</th><th>Adset</th><th>Inversión</th><th>Compras</th><th>CPA</th><th>ROAS</th><th>Rating</th></tr></thead>
+        <tbody id="adTable"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="analysis">
+    <h2>Análisis y Recomendaciones</h2>
+
+    <h3>Resumen 2025</h3>
+    <p>Gröner invirtió un total de <strong>$14.058.619 CLP</strong> durante 2025, generando <strong>463 compras</strong> con un ROAS promedio de <strong>9.2x</strong>. Los meses más fuertes fueron octubre-diciembre (Black Friday / temporada alta) con 288 compras concentrando el 54% del gasto anual.</p>
+    <ul>
+      <li><strong>Mejor mes por ROAS:</strong> Diciembre 2025 — ROAS 20.5x con CPA de $13.917</li>
+      <li><strong>Mejor mes por volumen:</strong> Noviembre 2025 — 123 compras con ROAS 13.0x</li>
+      <li><strong>Peor mes:</strong> Septiembre 2025 — solo 10 compras con CPA de $46.530</li>
+    </ul>
+
+    <h3>2026 — Tendencia Positiva</h3>
+    <p>En lo que va de 2026 (ene-mar), se acumulan <strong>127 compras</strong> con inversión de <strong>$1.948.963 CLP</strong>. El ROAS ha mejorado consistentemente: 12.1x → 15.4x → 17.3x, y el CPA ha bajado de $20.989 a $8.449.</p>
+    <p>De mantener este ritmo, marzo 2026 proyecta ser el mejor mes en eficiencia de la historia de la cuenta.</p>
+
+    <h3>Campañas Activas — Top Performers</h3>
+    <ul>
+      <li><strong>"Tráfico frío - Competencia indirecta"</strong> — Mejor campaña: ROAS 21.4x, CPA $8.208. El ad "General - Video 1" es el star performer con ROAS 27.0x.</li>
+      <li><strong>"RMK - Visitantes RRSS y Web"</strong> — ROAS 23.6x. El adset de Instagram (visitantes IG 30d) tiene ROAS 45.7x, es el más eficiente de toda la cuenta.</li>
+      <li><strong>"Tráfico frío ADV+ - Ventas Sin Catálogo"</strong> — ROAS 20.7x. Sólida pero con solo 1 ad activo.</li>
+    </ul>
+
+    <h3>Recomendaciones</h3>
+    <ul>
+      <li><strong>Escalar "Competencia indirecta":</strong> Con ROAS 21x y el mejor volumen de compras, aumentar presupuesto de $65/día a $100-120/día.</li>
+      <li><strong>Potenciar RMK Instagram:</strong> El adset de visitantes IG tiene ROAS 45.7x con solo $54.140 invertidos. Duplicar su budget.</li>
+      <li><strong>Reducir RMK Web:</strong> El adset de visitantes web tiene CPA $17.562 vs $5.414 del de IG. Redirigir presupuesto.</li>
+      <li><strong>Agregar más creativos al ADV+:</strong> Solo tiene 1 ad activo. Agregar 2-3 variaciones de video para que el algoritmo optimice mejor.</li>
+      <li><strong>Preparar Q4 temprano:</strong> Los datos muestran que oct-dic es la temporada fuerte. Planificar presupuestos y creativos con anticipación.</li>
+    </ul>
+  </div>
+</div>
+
+<div class="footer">
+  Generado por Matías — GoPoint Agency | Datos actualizados al 14 de marzo 2026
+</div>
+
+<script>
+// ─── Data ───────────────────────────────────────────────────────
+const monthly = [
+  { month: 'Ene 25', spend: 138570, impressions: 308954, clicks: 5973, ctr: 1.93, cpc: 23.20, purchases: 0, cpa: 0, roas: 0, year: 2025 },
+  { month: 'Feb 25', spend: 125352, impressions: 225765, clicks: 5186, ctr: 2.30, cpc: 24.17, purchases: 0, cpa: 0, roas: 0, year: 2025 },
+  { month: 'Mar 25', spend: 1056935, impressions: 539969, clicks: 11627, ctr: 2.15, cpc: 90.90, purchases: 21, cpa: 50330, roas: 4.66, year: 2025 },
+  { month: 'Abr 25', spend: 1498406, impressions: 626315, clicks: 10593, ctr: 1.69, cpc: 141.45, purchases: 36, cpa: 41622, roas: 5.46, year: 2025 },
+  { month: 'May 25', spend: 962784, impressions: 324678, clicks: 6867, ctr: 2.12, cpc: 140.20, purchases: 27, cpa: 35659, roas: 8.75, year: 2025 },
+  { month: 'Jun 25', spend: 1373009, impressions: 262517, clicks: 5152, ctr: 1.96, cpc: 266.50, purchases: 55, cpa: 24964, roas: 10.22, year: 2025 },
+  { month: 'Jul 25', spend: 387229, impressions: 178136, clicks: 3399, ctr: 1.91, cpc: 113.92, purchases: 9, cpa: 43025, roas: 4.08, year: 2025 },
+  { month: 'Ago 25', spend: 458984, impressions: 172328, clicks: 2858, ctr: 1.66, cpc: 160.60, purchases: 17, cpa: 27000, roas: 9.89, year: 2025 },
+  { month: 'Sep 25', spend: 465301, impressions: 171017, clicks: 2336, ctr: 1.37, cpc: 199.19, purchases: 10, cpa: 46530, roas: 3.32, year: 2025 },
+  { month: 'Oct 25', spend: 3004523, impressions: 678680, clicks: 11611, ctr: 1.71, cpc: 258.77, purchases: 77, cpa: 39020, roas: 9.24, year: 2025 },
+  { month: 'Nov 25', spend: 3362840, impressions: 972781, clicks: 10472, ctr: 1.08, cpc: 321.13, purchases: 123, cpa: 27340, roas: 12.95, year: 2025 },
+  { month: 'Dic 25', spend: 1224686, impressions: 374179, clicks: 4069, ctr: 1.09, cpc: 300.98, purchases: 88, cpa: 13917, roas: 20.45, year: 2025 },
+  { month: 'Ene 26', spend: 902510, impressions: 473480, clicks: 6949, ctr: 1.47, cpc: 129.88, purchases: 43, cpa: 20989, roas: 12.14, year: 2026 },
+  { month: 'Feb 26', spend: 818334, impressions: 434171, clicks: 8044, ctr: 1.85, cpc: 101.73, purchases: 57, cpa: 14357, roas: 15.35, year: 2026 },
+  { month: 'Mar 26', spend: 228119, impressions: 102929, clicks: 1879, ctr: 1.83, cpc: 121.40, purchases: 27, cpa: 8449, roas: 17.33, year: 2026 },
+];
+
+const activeCampaigns = [
+  { name: 'Tráfico frío - Competencia indirecta', spend: 180570, impressions: 79200, clicks: 1710, ctr: 2.16, purchases: 22, cpa: 8208, roas: 21.38 },
+  { name: 'Tráfico frío ADV+ - Ventas Sin Catálogo', spend: 167024, impressions: 90440, clicks: 1338, ctr: 1.48, purchases: 15, cpa: 11135, roas: 20.67 },
+  { name: 'RMK - Visitantes RRSS y Web', spend: 132905, impressions: 54828, clicks: 904, ctr: 1.65, purchases: 15, cpa: 8860, roas: 23.63 },
+];
+
+const activeAds = [
+  { name: 'General - Video 1', campaign: 'Competencia indirecta', adset: 'Competencia indirecta', spend: 120450, purchases: 18, cpa: 6692, roas: 26.97 },
+  { name: 'Campana - Video 1', campaign: 'Competencia indirecta', adset: 'Competencia indirecta', spend: 7220, purchases: 1, cpa: 7220, roas: 14.07 },
+  { name: 'Encimera - Video 1', campaign: 'Competencia indirecta', adset: 'Competencia indirecta', spend: 52900, purchases: 3, cpa: 17633, roas: 9.64 },
+  { name: 'General - Video 1 (RMK IG)', campaign: 'RMK Visitantes', adset: 'Visitantes IG 30d', spend: 50588, purchases: 10, cpa: 5059, roas: 48.88 },
+  { name: 'Tu cocina merece lo mejor (RMK FB)', campaign: 'RMK Visitantes', adset: 'Visitantes FB 30d', spend: 2356, purchases: 2, cpa: 1178, roas: 123.87 },
+  { name: 'Showroom - Tec. simp. (RMK Web)', campaign: 'RMK Visitantes', adset: 'Visitantes Web 30d', spend: 50604, purchases: 3, cpa: 16868, roas: 7.43 },
+  { name: 'Encimera - Video 1 (ADV+)', campaign: 'ADV+ Ventas', adset: 'Videos 1 - Conf. ADV+', spend: 167024, purchases: 15, cpa: 11135, roas: 20.67 },
+];
+
+// ─── Charts ─────────────────────────────────────────────────────
+let charts = {};
+
+function destroyCharts() {
+  Object.values(charts).forEach(c => c.destroy());
+  charts = {};
+}
+
+function fmt(n) {
+  return new Intl.NumberFormat('es-CL').format(Math.round(n));
+}
+
+function buildKpis(data) {
+  const totalSpend = data.reduce((s, m) => s + m.spend, 0);
+  const totalPurchases = data.reduce((s, m) => s + m.purchases, 0);
+  const totalImpressions = data.reduce((s, m) => s + m.impressions, 0);
+  const totalClicks = data.reduce((s, m) => s + m.clicks, 0);
+  const avgCpa = totalPurchases > 0 ? totalSpend / totalPurchases : 0;
+  const avgCtr = totalImpressions > 0 ? (totalClicks / totalImpressions * 100) : 0;
+  const roasValues = data.filter(m => m.roas > 0);
+  const avgRoas = roasValues.length > 0 ? roasValues.reduce((s, m) => s + m.roas, 0) / roasValues.length : 0;
+
+  document.getElementById('kpis').innerHTML = `
+    <div class="kpi"><div class="value">$${fmt(totalSpend)}</div><div class="label">Inversión Total (CLP)</div></div>
+    <div class="kpi green"><div class="value">${fmt(totalPurchases)}</div><div class="label">Compras Totales</div></div>
+    <div class="kpi blue"><div class="value">${avgRoas.toFixed(1)}x</div><div class="label">ROAS Promedio</div></div>
+    <div class="kpi yellow"><div class="value">$${fmt(avgCpa)}</div><div class="label">CPA Promedio</div></div>
+    <div class="kpi purple"><div class="value">${avgCtr.toFixed(2)}%</div><div class="label">CTR Promedio</div></div>
+    <div class="kpi"><div class="value">${fmt(totalImpressions)}</div><div class="label">Impresiones</div></div>
+  `;
+}
+
+function buildCharts(data) {
+  destroyCharts();
+  const labels = data.map(m => m.month);
+  const spendData = data.map(m => m.spend / 100);
+  const purchaseData = data.map(m => m.purchases);
+  const roasData = data.map(m => m.roas);
+  const cpaData = data.map(m => m.cpa);
+  const ctrData = data.map(m => m.ctr);
+  const cpcData = data.map(m => m.cpc);
+
+  const gridColor = 'rgba(255,255,255,0.06)';
+  const defaults = { responsive: true, plugins: { legend: { labels: { color: '#aaa' } } }, scales: { x: { ticks: { color: '#888' }, grid: { color: gridColor } }, y: { ticks: { color: '#888' }, grid: { color: gridColor } } } };
+
+  // Evolution
+  charts.evolution = new Chart(document.getElementById('chartEvolution'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        { label: 'Inversión (CLP/100)', data: spendData, backgroundColor: 'rgba(233,69,96,0.6)', borderRadius: 4, yAxisID: 'y' },
+        { label: 'Compras', data: purchaseData, type: 'line', borderColor: '#4ade80', backgroundColor: '#4ade80', pointRadius: 5, pointHoverRadius: 7, tension: 0.3, yAxisID: 'y1' }
+      ]
+    },
+    options: { ...defaults, scales: { ...defaults.scales, y1: { position: 'right', ticks: { color: '#4ade80' }, grid: { display: false } } } }
+  });
+
+  // ROAS
+  charts.roas = new Chart(document.getElementById('chartRoas'), {
+    type: 'line',
+    data: { labels, datasets: [{ label: 'ROAS', data: roasData, borderColor: '#60a5fa', backgroundColor: 'rgba(96,165,250,0.1)', fill: true, tension: 0.3, pointRadius: 4 }] },
+    options: defaults
+  });
+
+  // CPA
+  charts.cpa = new Chart(document.getElementById('chartCpa'), {
+    type: 'line',
+    data: { labels, datasets: [{ label: 'CPA (CLP)', data: cpaData, borderColor: '#fbbf24', backgroundColor: 'rgba(251,191,36,0.1)', fill: true, tension: 0.3, pointRadius: 4 }] },
+    options: defaults
+  });
+
+  // CTR + CPC
+  charts.ctrCpc = new Chart(document.getElementById('chartCtrCpc'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        { label: 'CTR (%)', data: ctrData, borderColor: '#a78bfa', tension: 0.3, pointRadius: 4, yAxisID: 'y' },
+        { label: 'CPC (CLP)', data: cpcData, borderColor: '#f97316', tension: 0.3, pointRadius: 4, yAxisID: 'y1' }
+      ]
+    },
+    options: { ...defaults, scales: { ...defaults.scales, y1: { position: 'right', ticks: { color: '#f97316' }, grid: { display: false } } } }
+  });
+}
+
+function buildActiveTables() {
+  // Campaign table
+  let html = '';
+  activeCampaigns.forEach(c => {
+    const badge = c.roas >= 20 ? '<span class="badge top">TOP</span>' : c.roas >= 10 ? '<span class="badge mid">MID</span>' : '<span class="badge low">LOW</span>';
+    html += `<tr>
+      <td>${c.name}</td><td>$${fmt(c.spend)}</td><td>${fmt(c.impressions)}</td><td>${fmt(c.clicks)}</td>
+      <td>${c.ctr.toFixed(2)}%</td><td>${c.purchases}</td><td>$${fmt(c.cpa)}</td><td>${c.roas.toFixed(1)}x</td><td>${badge}</td>
+    </tr>`;
+  });
+  document.getElementById('campTable').innerHTML = html;
+
+  // Ad table
+  html = '';
+  activeAds.sort((a, b) => b.roas - a.roas).forEach(a => {
+    const badge = a.roas >= 20 ? '<span class="badge top">TOP</span>' : a.roas >= 10 ? '<span class="badge mid">MID</span>' : '<span class="badge low">LOW</span>';
+    html += `<tr>
+      <td>${a.name}</td><td>${a.campaign}</td><td>${a.adset}</td><td>$${fmt(a.spend)}</td>
+      <td>${a.purchases}</td><td>$${fmt(a.cpa)}</td><td>${a.roas.toFixed(1)}x</td><td>${badge}</td>
+    </tr>`;
+  });
+  document.getElementById('adTable').innerHTML = html;
+}
+
+// ─── Tab Switching ──────────────────────────────────────────────
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
+
+  let data;
+  if (tab === '2025') data = monthly.filter(m => m.year === 2025);
+  else if (tab === '2026') data = monthly.filter(m => m.year === 2026);
+  else data = monthly;
+
+  buildKpis(data);
+  buildCharts(data);
+
+  const activeSection = document.getElementById('activeSection');
+  if (tab === 'active') {
+    activeSection.style.display = 'block';
+    buildActiveTables();
+    // Show KPIs for active campaigns
+    const totalSpend = activeCampaigns.reduce((s, c) => s + c.spend, 0);
+    const totalPurchases = activeCampaigns.reduce((s, c) => s + c.purchases, 0);
+    const avgRoas = activeCampaigns.reduce((s, c) => s + c.roas, 0) / activeCampaigns.length;
+    const avgCpa = totalPurchases > 0 ? totalSpend / totalPurchases : 0;
+    document.getElementById('kpis').innerHTML = `
+      <div class="kpi"><div class="value">$${fmt(totalSpend)}</div><div class="label">Inversión 30d (CLP)</div></div>
+      <div class="kpi green"><div class="value">${totalPurchases}</div><div class="label">Compras 30d</div></div>
+      <div class="kpi blue"><div class="value">${avgRoas.toFixed(1)}x</div><div class="label">ROAS Promedio</div></div>
+      <div class="kpi yellow"><div class="value">$${fmt(avgCpa)}</div><div class="label">CPA Promedio</div></div>
+      <div class="kpi purple"><div class="value">3</div><div class="label">Campañas Activas</div></div>
+      <div class="kpi"><div class="value">11</div><div class="label">Ads Activos</div></div>
+    `;
+  } else {
+    activeSection.style.display = 'none';
+  }
+}
+
+// ─── Init ───────────────────────────────────────────────────────
+buildKpis(monthly);
+buildCharts(monthly);
+buildActiveTables();
+</script>
+
+</body>
+</html>
