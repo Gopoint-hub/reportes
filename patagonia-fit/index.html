@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reporte — Patagonia Fit & Rehab</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0f1117;
+      color: #e1e4ea;
+      padding: 0;
+    }
+
+    /* Header */
+    .header {
+      background: linear-gradient(135deg, #1a1d27 0%, #2a1a3e 100%);
+      padding: 40px 48px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .header h1 {
+      font-size: 28px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 6px;
+    }
+    .header .subtitle {
+      color: #8b8fa3;
+      font-size: 14px;
+    }
+    .header .subtitle span { color: #a78bfa; font-weight: 600; }
+
+    /* KPI Cards */
+    .kpi-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      padding: 32px 48px 0;
+    }
+    .kpi-card {
+      background: #1a1d27;
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 12px;
+      padding: 20px 24px;
+    }
+    .kpi-card .label {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #6b7080;
+      margin-bottom: 8px;
+    }
+    .kpi-card .value {
+      font-size: 28px;
+      font-weight: 700;
+      color: #fff;
+    }
+    .kpi-card .change {
+      font-size: 13px;
+      margin-top: 6px;
+    }
+    .kpi-card .change.positive { color: #34d399; }
+    .kpi-card .change.negative { color: #f87171; }
+
+    /* Section */
+    .section {
+      padding: 32px 48px;
+    }
+    .section-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #fff;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .section-title .dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: #a78bfa;
+    }
+
+    /* Charts */
+    .chart-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    .chart-card {
+      background: #1a1d27;
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 12px;
+      padding: 24px;
+    }
+    .chart-card.full { grid-column: 1 / -1; }
+    .chart-card h3 {
+      font-size: 14px;
+      color: #8b8fa3;
+      margin-bottom: 16px;
+      font-weight: 500;
+    }
+    .chart-container {
+      position: relative;
+      height: 300px;
+    }
+    .chart-container.tall {
+      height: 360px;
+    }
+
+    /* Analysis Box */
+    .analysis-box {
+      background: linear-gradient(135deg, #1a1d27 0%, #1e1a2e 100%);
+      border: 1px solid rgba(167, 139, 250, 0.15);
+      border-radius: 12px;
+      padding: 28px 32px;
+      margin-top: 8px;
+    }
+    .analysis-box h3 {
+      color: #a78bfa;
+      font-size: 16px;
+      margin-bottom: 16px;
+    }
+    .analysis-box ul {
+      list-style: none;
+      padding: 0;
+    }
+    .analysis-box li {
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      font-size: 14px;
+      line-height: 1.6;
+      color: #c4c7d4;
+    }
+    .analysis-box li:last-child { border: none; }
+    .analysis-box li strong { color: #fff; }
+    .tag {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      margin-left: 6px;
+    }
+    .tag.green { background: rgba(52,211,153,0.15); color: #34d399; }
+    .tag.red { background: rgba(248,113,113,0.15); color: #f87171; }
+    .tag.yellow { background: rgba(251,191,36,0.15); color: #fbbf24; }
+    .tag.purple { background: rgba(167,139,250,0.15); color: #a78bfa; }
+
+    /* Table */
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    .data-table th {
+      text-align: left;
+      padding: 10px 12px;
+      color: #6b7080;
+      font-weight: 500;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .data-table td {
+      padding: 12px;
+      border-bottom: 1px solid rgba(255,255,255,0.03);
+      color: #c4c7d4;
+    }
+    .data-table tr:hover td { background: rgba(255,255,255,0.02); }
+    .data-table .num { text-align: right; font-variant-numeric: tabular-nums; }
+    .best { color: #34d399; font-weight: 600; }
+    .worst { color: #f87171; }
+
+    /* Footer */
+    .footer {
+      padding: 24px 48px;
+      text-align: center;
+      color: #4a4e5a;
+      font-size: 12px;
+      border-top: 1px solid rgba(255,255,255,0.04);
+      margin-top: 20px;
+    }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 20px;
+      background: rgba(255,255,255,0.03);
+      border-radius: 8px;
+      padding: 4px;
+      width: fit-content;
+    }
+    .tab-btn {
+      padding: 8px 20px;
+      border: none;
+      background: transparent;
+      color: #6b7080;
+      font-size: 13px;
+      cursor: pointer;
+      border-radius: 6px;
+      transition: all 0.2s;
+    }
+    .tab-btn.active {
+      background: #a78bfa;
+      color: #fff;
+    }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    @media (max-width: 900px) {
+      .chart-grid { grid-template-columns: 1fr; }
+      .kpi-row { grid-template-columns: repeat(2, 1fr); }
+      .section { padding: 24px 20px; }
+      .header { padding: 28px 20px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <div class="header">
+    <h1>Patagonia Fit & Rehab</h1>
+    <div class="subtitle">Campaña <span>WhatsApp Directo</span> · Mayo 2025 – Marzo 2026 · Generado el 13 de Marzo 2026</div>
+  </div>
+
+  <!-- KPIs -->
+  <div class="kpi-row">
+    <div class="kpi-card">
+      <div class="label">Gasto Total</div>
+      <div class="value">$1.424.653</div>
+      <div class="change">CLP · 11 meses activo</div>
+    </div>
+    <div class="kpi-card">
+      <div class="label">Conversaciones WA</div>
+      <div class="value">1.255</div>
+      <div class="change positive">321 en 2026 (+34% vs ritmo 2025)</div>
+    </div>
+    <div class="kpi-card">
+      <div class="label">Costo / Conversación</div>
+      <div class="value">$1.135</div>
+      <div class="change positive">↓ $1.141 → $1.118 en 2026</div>
+    </div>
+    <div class="kpi-card">
+      <div class="label">CTR Promedio</div>
+      <div class="value">2.78%</div>
+      <div class="change">Estable año a año</div>
+    </div>
+    <div class="kpi-card">
+      <div class="label">1st Reply Rate</div>
+      <div class="value">72%</div>
+      <div class="change negative">28% no recibe respuesta</div>
+    </div>
+  </div>
+
+  <!-- Tabs: 2025 vs 2026 -->
+  <div class="section">
+    <div class="section-title"><div class="dot"></div> Evolución Mensual</div>
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab('combined')">Vista Completa</button>
+      <button class="tab-btn" onclick="switchTab('y2025')">2025</button>
+      <button class="tab-btn" onclick="switchTab('y2026')">2026</button>
+    </div>
+
+    <div class="chart-grid">
+      <div class="chart-card full">
+        <h3>Gasto mensual vs Conversaciones de WhatsApp</h3>
+        <div class="chart-container tall"><canvas id="chartSpendConvos"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <h3>Costo por Conversación (CLP)</h3>
+        <div class="chart-container"><canvas id="chartCPA"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <h3>Tasa de Respuesta (1st Reply / Convos)</h3>
+        <div class="chart-container"><canvas id="chartReplyRate"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ads Performance -->
+  <div class="section">
+    <div class="section-title"><div class="dot"></div> Rendimiento por Ad — 2026</div>
+    <div class="chart-grid">
+      <div class="chart-card">
+        <h3>Distribución del Gasto por Ad</h3>
+        <div class="chart-container"><canvas id="chartAdSpend"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <h3>Costo por Conversación por Ad</h3>
+        <div class="chart-container"><canvas id="chartAdCPA"></canvas></div>
+      </div>
+      <div class="chart-card full">
+        <h3>Comparativa de Ads Activos (2026 YTD)</h3>
+        <div style="overflow-x: auto;">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Ad</th>
+                <th class="num">Gasto</th>
+                <th class="num">Impresiones</th>
+                <th class="num">Clicks</th>
+                <th class="num">CTR</th>
+                <th class="num">Convos</th>
+                <th class="num">Replies</th>
+                <th class="num">Reply %</th>
+                <th class="num">$/Convo</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>1</td><td>Adulto Mayor</td>
+                <td class="num">$69.692</td><td class="num">24.291</td><td class="num">1.123</td>
+                <td class="num best">4.62%</td><td class="num">72</td><td class="num">62</td>
+                <td class="num best">86%</td><td class="num">$968</td>
+              </tr>
+              <tr>
+                <td>2</td><td>Espacios Comunes</td>
+                <td class="num">$177.750</td><td class="num">86.999</td><td class="num">2.099</td>
+                <td class="num">2.41%</td><td class="num">154</td><td class="num">106</td>
+                <td class="num">69%</td><td class="num">$1.154</td>
+              </tr>
+              <tr>
+                <td>3</td><td>Video | Gym 2</td>
+                <td class="num">$31.764</td><td class="num">19.771</td><td class="num">432</td>
+                <td class="num">2.19%</td><td class="num">36</td><td class="num">20</td>
+                <td class="num worst">56%</td><td class="num best">$882</td>
+              </tr>
+              <tr>
+                <td>4</td><td>Hernia Lumbar</td>
+                <td class="num">$23.794</td><td class="num">11.272</td><td class="num">317</td>
+                <td class="num">2.81%</td><td class="num">21</td><td class="num">17</td>
+                <td class="num">81%</td><td class="num">$1.133</td>
+              </tr>
+              <tr>
+                <td>5</td><td>Jotes</td>
+                <td class="num">$16.778</td><td class="num">8.299</td><td class="num">249</td>
+                <td class="num">3.00%</td><td class="num">15</td><td class="num">11</td>
+                <td class="num">73%</td><td class="num">$1.119</td>
+              </tr>
+              <tr>
+                <td>6</td><td>Kine Jaime Promoción</td>
+                <td class="num">$10.967</td><td class="num">4.477</td><td class="num">116</td>
+                <td class="num">2.59%</td><td class="num">12</td><td class="num">6</td>
+                <td class="num worst">50%</td><td class="num">$914</td>
+              </tr>
+              <tr>
+                <td>7</td><td>Video 1 a 4</td>
+                <td class="num worst">$2.305</td><td class="num">820</td><td class="num">19</td>
+                <td class="num">2.32%</td><td class="num worst">2</td><td class="num worst">0</td>
+                <td class="num worst">0%</td><td class="num">$1.153</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Year Comparison -->
+  <div class="section">
+    <div class="section-title"><div class="dot"></div> 2025 vs 2026 — Comparativa</div>
+    <div class="chart-grid">
+      <div class="chart-card">
+        <h3>Métricas clave por año</h3>
+        <div class="chart-container"><canvas id="chartYearCompare"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <h3>Proyección 2026 vs 2025 real</h3>
+        <div class="chart-container"><canvas id="chartProjection"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Analysis -->
+  <div class="section">
+    <div class="section-title"><div class="dot"></div> Análisis y Recomendaciones</div>
+    <div class="analysis-box">
+      <h3>Resumen 2025</h3>
+      <ul>
+        <li><strong>$1.065.811 CLP</strong> invertidos en 8 meses activos (May–Dic) generando <strong>934 conversaciones de WhatsApp</strong> a un costo promedio de <strong>$1.141/convo</strong>. La campaña arrancó fuerte en mayo con el mejor CPA ($571) por ser audiencia fresca, pero se estabilizó entre $970–$1.580 el resto del año.</li>
+        <li><strong>Mejor mes:</strong> Julio 2025 con 158 convos a $971/convo <span class="tag green">Top</span> — coincide con temporada invernal donde la gente busca más kinesiología.</li>
+        <li><strong>Peor mes:</strong> Octubre 2025 con solo 84 convos a $1.581/convo <span class="tag red">Alerta</span> — posible fatiga de audiencia y transición primaveral.</li>
+        <li><strong>Diciembre repuntó</strong> cerrando con 156 convos a $983/convo, probablemente por creativos nuevos y propósitos de fin de año.</li>
+      </ul>
+    </div>
+
+    <div class="analysis-box" style="margin-top: 16px;">
+      <h3>Estado 2026 (Ene–Mar)</h3>
+      <ul>
+        <li><strong>$358.842 CLP</strong> invertidos en 2.5 meses → <strong>321 conversaciones</strong> a <strong>$1.118/convo</strong>. El costo por conversación mejoró un 2% respecto a 2025. <span class="tag green">Mejorando</span></li>
+        <li><strong>Marzo va en excelente ritmo:</strong> $909/convo, proyectando ser el mejor mes desde el lanzamiento (excluyendo mayo 2025 que fue arranque). <span class="tag green">Récord</span></li>
+        <li><strong>Proyección anual 2026:</strong> al ritmo actual (~128 convos/mes), cerraríamos con ~1.540 conversaciones anuales, un <strong>+65% vs 2025</strong> (que tuvo solo 8 meses). En meses comparables, el ritmo es similar pero con mejor eficiencia.</li>
+        <li><strong>"Adulto Mayor" es el ad estrella:</strong> CTR de 4.62% (el doble del promedio), 86% reply rate, y $968/convo. Meta debería estar asignándole más presupuesto. <span class="tag purple">Best Performer</span></li>
+        <li><strong>"Video 1 a 4" es ineficiente:</strong> solo 2 convos, 0 replies. Debería pausarse inmediatamente. <span class="tag red">Pausar</span></li>
+        <li><strong>Problema de reply rate:</strong> 28% de las personas que inician conversación no reciben respuesta. Esto equivale a ~90 potenciales clientes perdidos en 2026. <span class="tag yellow">Urgente</span></li>
+      </ul>
+    </div>
+
+    <div class="analysis-box" style="margin-top: 16px;">
+      <h3>Acciones Recomendadas</h3>
+      <ul>
+        <li><strong>1. Pausar "Video 1 a 4"</strong> — no está convirtiendo y desperdicia impresiones.</li>
+        <li><strong>2. Redistribuir peso hacia "Adulto Mayor"</strong> — duplicar el adset con solo los top 3 ads (Adulto Mayor, Video Gym 2, Kine Jaime) para forzar mayor entrega a estos creativos.</li>
+        <li><strong>3. Mejorar la respuesta en WhatsApp</strong> — configurar respuestas automáticas o asegurar que se conteste en menos de 5 minutos. Cada convo sin respuesta son ~$1.100 desperdiciados.</li>
+        <li><strong>4. Testear audiencia Lookalike</strong> — basada en quienes ya escribieron. Llevan 11 meses con la misma segmentación, posible fatiga.</li>
+        <li><strong>5. Separar adsets por servicio</strong> — Kine vs Gym para controlar presupuesto y medir retorno real por línea de negocio.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="footer">
+    Reporte generado por Matías · Meta Ads Manager CLI · 13 de Marzo 2026
+  </div>
+
+<script>
+  // ─── Data completa ──────────────────────────────────────────
+  const allMonths   = ['May 25','Jun 25','Jul 25','Ago 25','Sep 25','Oct 25','Nov 25','Dic 25','Ene 26','Feb 26','Mar 26*'];
+  const allSpend    = [20545, 151450, 153399, 154472, 149678, 132812, 150162, 153293, 155140, 139154, 64548];
+  const allConvos   = [36, 135, 158, 125, 127, 84, 113, 156, 132, 118, 71];
+  const allReplies  = [29, 95, 111, 90, 81, 54, 83, 106, 104, 82, 44];
+  const allCpa      = [571, 1122, 971, 1236, 1179, 1581, 1329, 983, 1175, 1179, 909];
+
+  // Índices: 2025 = 0..7, 2026 = 8..10
+  const slices = {
+    combined: { start: 0, end: 11 },
+    y2025:    { start: 0, end: 8 },
+    y2026:    { start: 8, end: 11 },
+  };
+
+  const defaults = {
+    responsive: true,
+    maintainAspectRatio: false,
+    animation: { duration: 400 },
+    plugins: {
+      legend: { labels: { color: '#8b8fa3', font: { size: 12 } } },
+    },
+    scales: {
+      x: { ticks: { color: '#6b7080' }, grid: { color: 'rgba(255,255,255,0.03)' } },
+      y: { ticks: { color: '#6b7080' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+    }
+  };
+
+  // ─── Instancias de los 3 gráficos filtrados por tab ─────────
+  let chartSpendConvos, chartCPA, chartReplyRate;
+
+  function colorForSpend(i, tab) {
+    if (tab === 'combined') return i >= 8 ? 'rgba(167,139,250,0.7)' : 'rgba(99,102,241,0.5)';
+    if (tab === 'y2026') return 'rgba(167,139,250,0.7)';
+    return 'rgba(99,102,241,0.5)';
+  }
+
+  function buildCharts(tab) {
+    const { start, end } = slices[tab];
+    const months    = allMonths.slice(start, end);
+    const spend     = allSpend.slice(start, end);
+    const convos    = allConvos.slice(start, end);
+    const replies   = allReplies.slice(start, end);
+    const cpa       = allCpa.slice(start, end);
+    const replyRate = convos.map((c, i) => c > 0 ? Math.round((replies[i] / c) * 100) : 0);
+
+    // Destroy old instances
+    if (chartSpendConvos) chartSpendConvos.destroy();
+    if (chartCPA) chartCPA.destroy();
+    if (chartReplyRate) chartReplyRate.destroy();
+
+    // Chart 1: Spend + Convos
+    chartSpendConvos = new Chart(document.getElementById('chartSpendConvos'), {
+      type: 'bar',
+      data: {
+        labels: months,
+        datasets: [
+          {
+            label: 'Gasto (CLP)',
+            data: spend,
+            backgroundColor: months.map((_, i) => colorForSpend(start + i, tab)),
+            borderRadius: 4,
+            yAxisID: 'y',
+            order: 2,
+          },
+          {
+            label: 'Conversaciones WA',
+            data: convos,
+            type: 'line',
+            borderColor: '#34d399',
+            backgroundColor: 'rgba(52,211,153,0.1)',
+            fill: true,
+            tension: 0.3,
+            pointRadius: 5,
+            pointBackgroundColor: '#34d399',
+            yAxisID: 'y1',
+            order: 1,
+          }
+        ]
+      },
+      options: {
+        ...defaults,
+        scales: {
+          x: defaults.scales.x,
+          y: {
+            ...defaults.scales.y,
+            position: 'left',
+            title: { display: true, text: 'Gasto (CLP)', color: '#6b7080' },
+          },
+          y1: {
+            ...defaults.scales.y,
+            position: 'right',
+            title: { display: true, text: 'Conversaciones', color: '#6b7080' },
+            grid: { drawOnChartArea: false },
+          }
+        }
+      }
+    });
+
+    // Chart 2: CPA
+    chartCPA = new Chart(document.getElementById('chartCPA'), {
+      type: 'line',
+      data: {
+        labels: months,
+        datasets: [{
+          label: '$/Conversación',
+          data: cpa,
+          borderColor: '#f59e0b',
+          backgroundColor: 'rgba(245,158,11,0.1)',
+          fill: true,
+          tension: 0.3,
+          pointRadius: 5,
+          pointBackgroundColor: cpa.map(v => v > 1300 ? '#f87171' : v < 1000 ? '#34d399' : '#f59e0b'),
+        }]
+      },
+      options: defaults,
+    });
+
+    // Chart 3: Reply Rate
+    chartReplyRate = new Chart(document.getElementById('chartReplyRate'), {
+      type: 'bar',
+      data: {
+        labels: months,
+        datasets: [{
+          label: '% Reply Rate',
+          data: replyRate,
+          backgroundColor: replyRate.map(v => v >= 75 ? 'rgba(52,211,153,0.6)' : v >= 65 ? 'rgba(251,191,36,0.6)' : 'rgba(248,113,113,0.6)'),
+          borderRadius: 4,
+        }]
+      },
+      options: {
+        ...defaults,
+        scales: {
+          ...defaults.scales,
+          y: { ...defaults.scales.y, min: 0, max: 100, ticks: { ...defaults.scales.y.ticks, callback: v => v + '%' } }
+        }
+      }
+    });
+  }
+
+  // Render inicial con vista completa
+  buildCharts('combined');
+
+  // ─── Tab switching ────────────────────────────────────────────
+  function switchTab(tab) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    event.target.classList.add('active');
+    buildCharts(tab);
+  }
+
+  // ─── Chart 4: Ad Spend Donut ─────────────────────────────────
+  new Chart(document.getElementById('chartAdSpend'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Espacios Comunes', 'Adulto Mayor', 'Video | Gym 2', 'Hernia Lumbar', 'Jotes', 'Kine Jaime', 'Video 1 a 4'],
+      datasets: [{
+        data: [177750, 69692, 31764, 23794, 16778, 10967, 2305],
+        backgroundColor: ['#6366f1','#a78bfa','#34d399','#f59e0b','#ec4899','#06b6d4','#f87171'],
+        borderWidth: 0,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: '65%',
+      plugins: {
+        legend: {
+          position: 'right',
+          labels: { color: '#8b8fa3', font: { size: 11 }, padding: 12, usePointStyle: true, pointStyleWidth: 8 }
+        }
+      }
+    }
+  });
+
+  // ─── Chart 5: Ad CPA Bar ─────────────────────────────────────
+  const adNames = ['Video|Gym2', 'Kine Jaime', 'Adulto M.', 'Jotes', 'Hernia L.', 'Video 1a4', 'Espacios C.'];
+  const adCPA = [882, 914, 968, 1119, 1133, 1153, 1154];
+  new Chart(document.getElementById('chartAdCPA'), {
+    type: 'bar',
+    data: {
+      labels: adNames,
+      datasets: [{
+        label: '$/Conversación',
+        data: adCPA,
+        backgroundColor: adCPA.map(v => v < 950 ? 'rgba(52,211,153,0.7)' : v < 1100 ? 'rgba(251,191,36,0.6)' : 'rgba(248,113,113,0.5)'),
+        borderRadius: 4,
+      }]
+    },
+    options: {
+      ...defaults,
+      indexAxis: 'y',
+    }
+  });
+
+  // ─── Chart 6: Year Compare ───────────────────────────────────
+  new Chart(document.getElementById('chartYearCompare'), {
+    type: 'bar',
+    data: {
+      labels: ['Gasto (x100K)', 'Conversaciones', 'Costo/Convo', '1st Replies'],
+      datasets: [
+        {
+          label: '2025 (8 meses)',
+          data: [10.66, 934, 1141, 649],
+          backgroundColor: 'rgba(99,102,241,0.6)',
+          borderRadius: 4,
+        },
+        {
+          label: '2026 (2.5 meses)',
+          data: [3.59, 321, 1118, 230],
+          backgroundColor: 'rgba(167,139,250,0.7)',
+          borderRadius: 4,
+        }
+      ]
+    },
+    options: defaults,
+  });
+
+  // ─── Chart 7: Projection ────────────────────────────────────
+  const cum2025 = [0, 135, 293, 418, 545, 629, 742, 898];
+  const cum2026 = [0, 132, 250, 321];
+  const proj2026 = [0, 132, 250, 321, 449, 577, 705, 833, 961, 1089, 1217, 1345, 1473];
+  const projMonths = ['Inicio','Mes 1','Mes 2','Mes 3','Mes 4','Mes 5','Mes 6','Mes 7','Mes 8','Mes 9','Mes 10','Mes 11','Mes 12'];
+
+  new Chart(document.getElementById('chartProjection'), {
+    type: 'line',
+    data: {
+      labels: projMonths,
+      datasets: [
+        {
+          label: '2025 real (Jun–Dic)',
+          data: [...cum2025, null, null, null, null, null],
+          borderColor: '#6366f1',
+          pointRadius: 4,
+          tension: 0.2,
+        },
+        {
+          label: '2026 real (Ene–Mar)',
+          data: [...cum2026, null, null, null, null, null, null, null, null, null],
+          borderColor: '#a78bfa',
+          pointRadius: 5,
+          pointBackgroundColor: '#a78bfa',
+          tension: 0.2,
+        },
+        {
+          label: '2026 proyección',
+          data: proj2026,
+          borderColor: 'rgba(167,139,250,0.3)',
+          borderDash: [5, 5],
+          pointRadius: 0,
+          tension: 0.2,
+        }
+      ]
+    },
+    options: {
+      ...defaults,
+      scales: {
+        ...defaults.scales,
+        y: { ...defaults.scales.y, title: { display: true, text: 'Conversaciones acumuladas', color: '#6b7080' } }
+      }
+    }
+  });
+</script>
+
+</body>
+</html>
