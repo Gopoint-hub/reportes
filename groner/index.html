@@ -6,25 +6,25 @@
   <title>Reporte GRONER — Meta Ads</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: #090b10; color: #c9cdd6; line-height: 1.6; }
+    body { font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif; background: #050505; color: #c9cdd6; line-height: 1.6; }
 
     /* ─── Header ─── */
     .header { position: relative; padding: 3rem 2rem 2.5rem; text-align: center; overflow: hidden; border-bottom: 1px solid rgba(255,255,255,0.06); }
-    .header::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 0%, rgba(233,69,96,0.12) 0%, transparent 70%); pointer-events: none; }
+    .header::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 0%, rgba(252,80,0,0.12) 0%, transparent 70%); pointer-events: none; }
     .header .back { position: absolute; top: 1.5rem; left: 2rem; color: #666; text-decoration: none; font-size: 0.85rem; transition: color 0.2s; }
-    .header .back:hover { color: #e94560; }
-    .header .logo { font-size: 0.7rem; font-weight: 600; letter-spacing: 3px; text-transform: uppercase; color: #e94560; margin-bottom: 0.5rem; }
+    .header .back:hover { color: #fc5000; }
+    .header .logo { font-size: 0.7rem; font-weight: 600; letter-spacing: 3px; text-transform: uppercase; color: #fc5000; margin-bottom: 0.5rem; }
     .header h1 { font-size: 2.4rem; font-weight: 700; color: #fff; letter-spacing: 1px; }
     .header .meta { color: #5a5e6e; font-size: 0.85rem; margin-top: 0.6rem; }
-    .header .date-badge { display: inline-block; margin-top: 1rem; padding: 0.35rem 1rem; background: rgba(233,69,96,0.1); border: 1px solid rgba(233,69,96,0.2); border-radius: 20px; font-size: 0.75rem; color: #e94560; font-weight: 500; }
+    .header .date-badge { display: inline-block; margin-top: 1rem; padding: 0.35rem 1rem; background: rgba(252,80,0,0.1); border: 1px solid rgba(252,80,0,0.2); border-radius: 20px; font-size: 0.75rem; color: #fc5000; font-weight: 500; }
 
     /* ─── Tabs ─── */
     .tabs { display: flex; justify-content: center; gap: 0.4rem; padding: 1rem 1rem; background: rgba(255,255,255,0.02); border-bottom: 1px solid rgba(255,255,255,0.05); }
     .tab { padding: 0.55rem 1.4rem; border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; background: transparent; color: #6b7080; cursor: pointer; font-size: 0.82rem; font-family: inherit; font-weight: 500; transition: all 0.2s; }
-    .tab.active { background: #e94560; color: #fff; border-color: #e94560; box-shadow: 0 2px 12px rgba(233,69,96,0.3); }
+    .tab.active { background: #fc5000; color: #fff; border-color: #fc5000; box-shadow: 0 2px 12px rgba(252,80,0,0.3); }
     .tab:hover:not(.active) { border-color: rgba(255,255,255,0.15); color: #a0a4b0; }
 
     /* ─── Layout ─── */
@@ -33,12 +33,12 @@
     .section-title { font-size: 0.7rem; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: #5a5e6e; margin-bottom: 1.2rem; padding-left: 0.2rem; }
 
     /* ─── KPIs ─── */
-    .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(155px, 1fr)); gap: 0.8rem; }
+    .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(165px, 1fr)); gap: 0.8rem; }
     .kpi { background: rgba(255,255,255,0.03); border-radius: 12px; padding: 1.3rem 1rem; text-align: center; border: 1px solid rgba(255,255,255,0.05); transition: border-color 0.2s; }
     .kpi:hover { border-color: rgba(255,255,255,0.1); }
-    .kpi .value { font-size: 1.6rem; font-weight: 700; color: #fff; }
+    .kpi .value { font-size: 1.35rem; font-weight: 700; color: #fff; word-break: break-word; }
     .kpi .label { font-size: 0.7rem; color: #5a5e6e; margin-top: 0.3rem; text-transform: uppercase; letter-spacing: 0.8px; font-weight: 500; }
-    .kpi.accent .value { color: #e94560; }
+    .kpi.accent .value { color: #fc5000; }
     .kpi.green .value { color: #34d399; }
     .kpi.blue .value { color: #60a5fa; }
     .kpi.amber .value { color: #fbbf24; }
@@ -50,7 +50,7 @@
     .chart-card.full { grid-column: 1 / -1; }
     .chart-card .card-header { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 0.3rem; }
     .chart-card h3 { color: #fff; font-size: 0.95rem; font-weight: 600; }
-    .chart-card .card-hint { font-size: 0.75rem; color: #e94560; font-weight: 500; }
+    .chart-card .card-hint { font-size: 0.75rem; color: #fc5000; font-weight: 500; }
     .chart-card .card-desc { font-size: 0.8rem; color: #5a5e6e; margin-bottom: 1.2rem; line-height: 1.5; }
 
     /* ─── Tables ─── */
@@ -68,7 +68,7 @@
     /* ─── Analysis ─── */
     .analysis { background: rgba(255,255,255,0.03); border-radius: 14px; padding: 2rem; border: 1px solid rgba(255,255,255,0.05); }
     .analysis h2 { color: #fff; font-size: 1.1rem; font-weight: 700; margin-bottom: 1.5rem; padding-bottom: 0.8rem; border-bottom: 1px solid rgba(255,255,255,0.06); }
-    .analysis h3 { color: #e94560; font-size: 0.8rem; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; margin: 1.8rem 0 0.6rem; }
+    .analysis h3 { color: #fc5000; font-size: 0.8rem; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; margin: 1.8rem 0 0.6rem; }
     .analysis h3:first-of-type { margin-top: 0; }
     .analysis p { color: #9096a4; font-size: 0.9rem; margin-bottom: 0.6rem; }
     .analysis strong { color: #d0d4de; }
@@ -277,7 +277,7 @@ function baseOptions(opts = {}) {
     maintainAspectRatio: true,
     interaction: { mode: 'index', intersect: false },
     plugins: {
-      legend: { labels: { color: '#8a8e9a', font: { size: 11, family: 'Inter' }, boxWidth: 12, padding: 16 } },
+      legend: { labels: { color: '#8a8e9a', font: { size: 11, family: 'Poppins' }, boxWidth: 12, padding: 16 } },
       tooltip: { backgroundColor: '#1e2130', titleColor: '#fff', bodyColor: '#c0c4ce', borderColor: 'rgba(255,255,255,0.08)', borderWidth: 1, padding: 12, cornerRadius: 8, titleFont: { weight: 600 } }
     },
     scales: {
@@ -338,7 +338,7 @@ function buildCharts(data) {
     data: {
       labels,
       datasets: [
-        { label: 'Inversion (miles CLP)', data: spendData, backgroundColor: 'rgba(233,69,96,0.5)', hoverBackgroundColor: 'rgba(233,69,96,0.7)', borderRadius: 6, barPercentage: 0.7, yAxisID: 'y' },
+        { label: 'Inversion (miles CLP)', data: spendData, backgroundColor: 'rgba(252,80,0,0.5)', hoverBackgroundColor: 'rgba(252,80,0,0.7)', borderRadius: 6, barPercentage: 0.7, yAxisID: 'y' },
         { label: 'Compras', data: purchaseData, type: 'line', borderColor: '#34d399', backgroundColor: 'transparent', pointBackgroundColor: '#34d399', pointRadius: 4, pointHoverRadius: 6, tension: 0.35, borderWidth: 2.5, yAxisID: 'y1' }
       ]
     },
