@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reporte — Cancagua</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #050505;
+      color: #e1e4ea;
+      padding: 0;
+    }
+
+    /* Header */
+    .header {
+      background: linear-gradient(135deg, #1a1d27 0%, #0d1f1a 100%);
+      padding: 40px 48px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .back { position: absolute; top: 1.5rem; left: 2rem; color: #666; text-decoration: none; font-size: 0.85rem; }
+    .back:hover { color: #fc5000; }
+    .header h1 {
+      font-size: 28px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 6px;
+    }
+    .header .subtitle {
+      color: #8b8fa3;
+      font-size: 14px;
+    }
+    .header .subtitle span { color: #fc5000; font-weight: 600; }
+
+    /* KPI Cards */
+    .kpi-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      padding: 32px 48px 0;
+    }
+    .kpi-card {
+      background: #1a1d27;
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 12px;
+      padding: 20px 24px;
+    }
+    .kpi-card .label {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #6b7080;
+      margin-bottom: 8px;
+    }
+    .kpi-card .value {
+      font-size: 28px;
+      font-weight: 700;
+      color: #fff;
+    }
+    .kpi-card .change {
+      font-size: 13px;
+      margin-top: 6px;
+    }
+    .kpi-card .change.positive { color: #34d399; }
+    .kpi-card .change.neutral { color: #8b8fa3; }
+
+    /* Section */
+    .section {
+      padding: 32px 48px;
+    }
+    .section-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #fff;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .section-title .dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: #fc5000;
+    }
+
+    /* Charts */
+    .chart-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    .chart-card {
+      background: #1a1d27;
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 12px;
+      padding: 24px;
+    }
+    .chart-card.full { grid-column: 1 / -1; }
+    .chart-card h3 {
+      font-size: 14px;
+      color: #8b8fa3;
+      margin-bottom: 16px;
+      font-weight: 500;
+    }
+    .chart-container {
+      position: relative;
+      height: 300px;
+    }
+    .chart-container.tall {
+      height: 360px;
+    }
+
+    /* Inflection Banner */
+    .inflection-banner {
+      margin: 0 48px 0;
+      padding: 14px 20px;
+      background: rgba(52,211,153,0.08);
+      border: 1px solid rgba(52,211,153,0.2);
+      border-radius: 10px;
+      color: #34d399;
+      font-size: 0.85rem;
+      font-weight: 500;
+      margin-top: 24px;
+    }
+    .inflection-banner strong { color: #6ee7b7; }
+
+    /* Analysis Box */
+    .analysis-box {
+      background: linear-gradient(135deg, #1a1d27 0%, #1e1a2e 100%);
+      border: 1px solid rgba(167, 139, 250, 0.15);
+      border-radius: 12px;
+      padding: 28px 32px;
+      margin-top: 8px;
+    }
+    .analysis-box h3 {
+      color: #fc5000;
+      font-size: 16px;
+      margin-bottom: 16px;
+    }
+    .analysis-box ul {
+      list-style: none;
+      padding: 0;
+    }
+    .analysis-box li {
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      font-size: 14px;
+      line-height: 1.6;
+      color: #c4c7d4;
+    }
+    .analysis-box li:last-child { border: none; }
+    .analysis-box li strong { color: #fff; }
+    .tag {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      margin-left: 6px;
+    }
+    .tag.green { background: rgba(52,211,153,0.15); color: #34d399; }
+    .tag.red { background: rgba(248,113,113,0.15); color: #f87171; }
+    .tag.yellow { background: rgba(251,191,36,0.15); color: #fbbf24; }
+    .tag.purple { background: rgba(252,80,0,0.15); color: #fc5000; }
+    .tag.blue { background: rgba(96,165,250,0.15); color: #60a5fa; }
+
+    /* Table */
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    .data-table th {
+      text-align: left;
+      padding: 10px 12px;
+      color: #6b7080;
+      font-weight: 500;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .data-table td {
+      padding: 12px;
+      border-bottom: 1px solid rgba(255,255,255,0.03);
+      color: #c4c7d4;
+    }
+    .data-table tr:hover td { background: rgba(255,255,255,0.02); }
+    .data-table .num { text-align: right; font-variant-numeric: tabular-nums; }
+    .best { color: #34d399; font-weight: 600; }
+    .highlight { color: #fc5000; font-weight: 600; }
+
+    /* Footer */
+    .footer {
+      padding: 24px 48px;
+      text-align: center;
+      color: #4a4e5a;
+      font-size: 12px;
+      border-top: 1px solid rgba(255,255,255,0.04);
+      margin-top: 20px;
+    }
+
+    /* Platform tabs */
+    .platform-tab { padding: 0.55rem 1.4rem; border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; background: transparent; color: #6b7080; cursor: pointer; font-size: 0.82rem; font-family: inherit; font-weight: 500; transition: all 0.2s; }
+    .platform-tab.active { background: #fc5000; color: #fff; border-color: #fc5000; box-shadow: 0 2px 12px rgba(252,80,0,0.3); }
+    .platform-tab:hover:not(.active) { border-color: rgba(255,255,255,0.15); color: #a0a4b0; }
+    .platform-section { display: none; }
+    .platform-section.active { display: block; }
+
+    /* Google Ads KPIs */
+    .gads-kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.8rem; padding: 32px 48px 0; }
+    .gads-kpi { background: #1a1d27; border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 1.3rem 1rem; text-align: center; }
+    .gads-kpi .value { font-size: 1.35rem; font-weight: 700; color: #fff; }
+    .gads-kpi .label { font-size: 0.7rem; color: #5a5e6e; margin-top: 0.3rem; text-transform: uppercase; letter-spacing: 0.8px; font-weight: 500; }
+    .gads-kpi.accent .value { color: #fc5000; }
+    .gads-kpi.green .value { color: #34d399; }
+    .gads-kpi.blue .value { color: #60a5fa; }
+    .gads-kpi.amber .value { color: #fbbf24; }
+
+    @media (max-width: 900px) {
+      .chart-grid { grid-template-columns: 1fr; }
+      .kpi-row { grid-template-columns: repeat(2, 1fr); gap: 10px; padding: 20px 16px 0; }
+      .section { padding: 20px 16px; }
+      .header { padding: 24px 16px; }
+      .header h1 { font-size: 22px; }
+      .kpi-card { padding: 14px 16px; }
+      .kpi-card .value { font-size: 22px; }
+      .chart-card { padding: 16px; }
+      .chart-container { height: 250px; }
+      .chart-container.tall { height: 280px; }
+      .analysis-box { padding: 20px 16px; }
+      .analysis-box li { font-size: 13px; padding: 8px 0; }
+      .data-table { font-size: 11px; }
+      .data-table th { font-size: 10px; padding: 8px 6px; }
+      .data-table td { padding: 8px 6px; }
+      .footer { padding: 20px 16px; }
+      .gads-kpis { grid-template-columns: repeat(2, 1fr); gap: 8px; padding: 20px 16px 0; }
+      .gads-kpi .value { font-size: 1.1rem; }
+      .inflection-banner { margin: 16px 16px 0; }
+    }
+    @media (max-width: 480px) {
+      .kpi-row { grid-template-columns: 1fr 1fr; gap: 8px; padding: 16px 12px 0; }
+      .section { padding: 16px 12px; }
+      .header { padding: 20px 12px; padding-top: 40px; }
+      .header h1 { font-size: 19px; }
+      .kpi-card .value { font-size: 20px; }
+      .chart-container { height: 220px; }
+      .chart-container.tall { height: 250px; }
+      .analysis-box { padding: 16px 12px; }
+      .analysis-box li { font-size: 12px; line-height: 1.5; }
+      .tag { font-size: 10px; padding: 1px 6px; }
+      .data-table th, .data-table td { padding: 6px 4px; white-space: nowrap; }
+      .platform-tab { padding: 0.4rem 1rem; font-size: 0.75rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <div class="header" style="position:relative;">
+    <a href="../" class="back">&larr; Todos los reportes</a>
+    <h1>Cancagua</h1>
+    <div class="subtitle">Meta Ads + Google Ads · Mar 2025 – Mar 2026 · Actualizado <span>20 Marzo 2026</span></div>
+  </div>
+
+  <!-- Platform Tabs -->
+  <div style="display:flex;justify-content:center;gap:0.4rem;padding:0.8rem 1rem;background:rgba(255,255,255,0.02);border-bottom:1px solid rgba(255,255,255,0.05);position:sticky;top:0;z-index:10;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);">
+    <button class="platform-tab active" onclick="switchPlatform('meta',this)">Meta Ads</button>
+    <button class="platform-tab" onclick="switchPlatform('google',this)">Google Ads</button>
+  </div>
+
+  <!-- ═══ META ADS SECTION ═══ -->
+  <div id="metaSection" class="platform-section active">
+
+    <!-- KPIs -->
+    <div class="kpi-row">
+      <div class="kpi-card">
+        <div class="label">Gasto Total</div>
+        <div class="value">$6.6M</div>
+        <div class="change neutral">CLP · 13 meses activo</div>
+      </div>
+      <div class="kpi-card">
+        <div class="label">Total Purchases</div>
+        <div class="value">766</div>
+        <div class="change positive">↑ 323 en Feb 2026 (récord)</div>
+      </div>
+      <div class="kpi-card">
+        <div class="label">ROAS Promedio</div>
+        <div class="value">14.7x</div>
+        <div class="change positive">↑ 22.68x en Feb 2026 (peak)</div>
+      </div>
+      <div class="kpi-card">
+        <div class="label">CTR Promedio</div>
+        <div class="value">1.78%</div>
+        <div class="change positive">↑ 2.10% en Sep 2025</div>
+      </div>
+    </div>
+
+    <!-- Inflection point banner -->
+    <div class="inflection-banner">
+      🚀 <strong>Punto de inflexión — Noviembre 2025:</strong> Primer mes con compras registradas (21 purchases, ROAS 5.12x). Desde entonces el crecimiento ha sido exponencial: en 4 meses pasamos de 0 a 766 compras totales y ROAS promedio de 14.7x.
+    </div>
+
+    <!-- Monthly Chart -->
+    <div class="section">
+      <div class="section-title"><div class="dot"></div> Evolución Mensual — Gasto vs ROAS</div>
+      <div class="chart-grid">
+        <div class="chart-card full">
+          <h3>Gasto mensual (CLP) vs ROAS · Mar 2025 – Mar 2026</h3>
+          <div class="chart-container tall"><canvas id="chartMetaMonthly"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <h3>ROAS mensual (x)</h3>
+          <div class="chart-container"><canvas id="chartRoas"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <h3>Purchases mensuales</h3>
+          <div class="chart-container"><canvas id="chartPurchases"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Campaigns Table -->
+    <div class="section">
+      <div class="section-title"><div class="dot"></div> Top Campañas — Performance con ROAS</div>
+      <div class="chart-grid">
+        <div class="chart-card full">
+          <h3>Campañas de ventas por ROAS · Mar 2025 – Mar 2026</h3>
+          <div style="overflow-x:auto;">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Campaña</th>
+                  <th class="num">Gasto</th>
+                  <th class="num">Clicks</th>
+                  <th class="num">Purchases</th>
+                  <th class="num">Valor</th>
+                  <th class="num">ROAS</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>1</td><td>ventas chile</td>
+                  <td class="num">$1.311.762</td>
+                  <td class="num">22.900</td>
+                  <td class="num">308</td>
+                  <td class="num">$32.091.400</td>
+                  <td class="num best">24.46x</td>
+                </tr>
+                <tr>
+                  <td>2</td><td>Ventas RT Chile</td>
+                  <td class="num">$1.399.638</td>
+                  <td class="num">53.228</td>
+                  <td class="num">211</td>
+                  <td class="num">$20.551.860</td>
+                  <td class="num">14.68x</td>
+                </tr>
+                <tr>
+                  <td>3</td><td>ventas region de los lagos rios</td>
+                  <td class="num">$806.612</td>
+                  <td class="num">14.824</td>
+                  <td class="num">173</td>
+                  <td class="num">$17.341.750</td>
+                  <td class="num">21.50x</td>
+                </tr>
+                <tr style="background:rgba(252,80,0,0.04);">
+                  <td>4</td><td>RT amor ventas ⭐</td>
+                  <td class="num">$77.025</td>
+                  <td class="num">1.473</td>
+                  <td class="num">30</td>
+                  <td class="num">$3.041.530</td>
+                  <td class="num highlight">39.49x</td>
+                </tr>
+                <tr>
+                  <td>5</td><td>RT Marzo mujeres lagos rios</td>
+                  <td class="num">$82.514</td>
+                  <td class="num">1.125</td>
+                  <td class="num">18</td>
+                  <td class="num">$1.653.000</td>
+                  <td class="num">20.03x</td>
+                </tr>
+                <tr>
+                  <td>6</td><td>Marzo mujeres lagos rios</td>
+                  <td class="num">$89.128</td>
+                  <td class="num">1.443</td>
+                  <td class="num">8</td>
+                  <td class="num">$757.000</td>
+                  <td class="num">8.49x</td>
+                </tr>
+                <tr>
+                  <td>7</td><td>empresa</td>
+                  <td class="num">$74.141</td>
+                  <td class="num">618</td>
+                  <td class="num">4</td>
+                  <td class="num">$522.000</td>
+                  <td class="num">7.04x</td>
+                </tr>
+                <tr>
+                  <td>8</td><td>inter prueba</td>
+                  <td class="num">$567.785</td>
+                  <td class="num">13.335</td>
+                  <td class="num">10</td>
+                  <td class="num">$888.980</td>
+                  <td class="num">1.57x</td>
+                </tr>
+                <tr>
+                  <td>9</td><td>RT inter videos</td>
+                  <td class="num">$655.219</td>
+                  <td class="num">14.085</td>
+                  <td class="num">4</td>
+                  <td class="num">$285.000</td>
+                  <td class="num">0.43x</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="chart-card">
+          <h3>ROAS por campaña — Top performers</h3>
+          <div class="chart-container"><canvas id="chartCampaignRoas"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <h3>Distribución del gasto por campaña</h3>
+          <div class="chart-container"><canvas id="chartCampaignSpend"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Analysis -->
+    <div class="section">
+      <div class="section-title"><div class="dot"></div> Análisis y Recomendaciones — Abril 2026</div>
+
+      <div class="analysis-box">
+        <h3>Resultados 2025–2026 — Un arranque extraordinario</h3>
+        <ul>
+          <li><strong>$6.6M CLP invertidos</strong> en 13 meses de pauta, generando <strong>766 purchases y $67.1M en valor de ventas</strong>. Un ROAS promedio de 14.7x significa que por cada peso invertido en Meta se recuperaron $14.7 en ingresos. <span class="tag green">Excelente</span></li>
+          <li><strong>Punto de inflexión en Noviembre 2025:</strong> las primeras 21 compras con ROAS 5.12x marcaron el inicio de una curva de crecimiento exponencial. En Diciembre ya eran 121 compras a ROAS 21.75x. <span class="tag green">Crecimiento sostenido</span></li>
+          <li><strong>Febrero 2026 — Mejor mes histórico:</strong> 323 purchases, $35.2M en valor, ROAS de 22.68x. La escala de la inversión ($1.55M) se tradujo directamente en resultados record. <span class="tag green">Récord</span></li>
+          <li><strong>"ventas chile" es la campaña estrella:</strong> 308 purchases a ROAS de 24.46x con $1.3M de inversión. La campaña más eficiente y escalable del portafolio. <span class="tag purple">Best Performer</span></li>
+          <li><strong>"RT amor ventas" tiene el mejor ROAS del portafolio: 39.49x</strong> — Con solo $77K de inversión generó $3M en valor. Esta campaña tiene un potencial enorme de escalabilidad. <span class="tag purple">⭐ Potenciar</span></li>
+          <li><strong>Campañas región de los lagos:</strong> "ventas region de los lagos rios" logró ROAS de 21.50x y 173 purchases. El mercado regional muestra un apetito muy fuerte por los productos de Cancagua. <span class="tag green">Oportunidad regional</span></li>
+        </ul>
+      </div>
+
+      <div class="analysis-box" style="margin-top:16px;">
+        <h3>Recomendaciones para Abril 2026</h3>
+        <ul>
+          <li><strong>1. Escalar "RT amor ventas" (ROAS 39.49x)</strong> — Es la campaña de mayor retorno del portafolio con solo $77K invertidos. Aumentar presupuesto 3x–5x y crear variaciones de creatividad para no saturar audiencias. <span class="tag purple">Prioridad #1</span></li>
+          <li><strong>2. Mantener y optimizar "ventas chile" (ROAS 24.46x)</strong> — La campaña con mayor volumen y retorno. Continuar alimentando con creativos frescos y audiencias similares (Lookalike) basadas en los 308 compradores. <span class="tag green">Mantener escala</span></li>
+          <li><strong>3. Potenciar campañas regionales</strong> — "ventas region de los lagos rios" (ROAS 21.50x) y "RT Marzo mujeres lagos rios" (ROAS 20.03x) muestran que el mercado regional convierte muy bien. Expandir a otras regiones. <span class="tag green">Expandir</span></li>
+          <li><strong>4. Reducir inversión en campañas de interacción pura</strong> — Las campañas "inter" (inter chile externos, inter prueba, inter zona oriente, etc.) consumen ~$1.5M sin generar purchases directas. Reasignar presupuesto a campañas de venta. <span class="tag yellow">Optimizar mix</span></li>
+          <li><strong>5. Campaña Día de la Madre (Mayo se acerca)</strong> — Preparar campaña especial para mayo: termas en familia, regalo experiencial, packs parejas. Lanzar pauta 2–3 semanas antes para capturar intent temprano. <span class="tag blue">Próximo hito</span></li>
+          <li><strong>6. Contenido para Abril — Temporada Otoño:</strong> Videos cortos de experiencia en las termas en día lluvioso/otoñal (los baños termales son perfectos para días fríos), promos de temporada media, reels mostrando las instalaciones con niebla/lluvia para crear ambiente. <span class="tag purple">Ideas creativas</span></li>
+        </ul>
+      </div>
+    </div>
+
+  </div><!-- /metaSection -->
+
+  <!-- ═══ GOOGLE ADS SECTION ═══ -->
+  <div id="googleSection" class="platform-section">
+
+    <div class="gads-kpis">
+      <div class="gads-kpi accent"><div class="value">$5.98M</div><div class="label">Inversión total (Mar 25–Mar 26)</div></div>
+      <div class="gads-kpi blue"><div class="value">62.884</div><div class="label">Clicks totales</div></div>
+      <div class="gads-kpi green"><div class="value">15.5%</div><div class="label">CTR promedio</div></div>
+      <div class="gads-kpi amber"><div class="value">2.281</div><div class="label">Conversiones totales</div></div>
+    </div>
+
+    <!-- Monthly Trend -->
+    <div class="section">
+      <div class="section-title"><div class="dot" style="background:#4285f4;"></div> Evolución Mensual — Google Ads</div>
+      <div class="chart-grid">
+        <div class="chart-card full">
+          <h3>Inversión mensual (CLP) + Conversiones · Mar 2025 – Mar 2026</h3>
+          <div class="chart-container tall"><canvas id="chartGadsMonthly"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <h3>CTR mensual (%) — Muy por encima del benchmark</h3>
+          <div class="chart-container"><canvas id="chartGadsCtr"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <h3>Conversiones mensuales — Crecimiento exponencial</h3>
+          <div class="chart-container"><canvas id="chartGadsConversions"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Campaigns -->
+    <div class="section">
+      <div class="section-title"><div class="dot" style="background:#4285f4;"></div> Campañas activas — Dic 2025 – Mar 2026</div>
+      <div class="chart-grid">
+        <div class="chart-card full">
+          <div style="overflow-x:auto;">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Campaña</th>
+                  <th>Estado</th>
+                  <th class="num">Gasto</th>
+                  <th class="num">Clicks</th>
+                  <th class="num">CTR</th>
+                  <th class="num">Conversiones</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr style="background:rgba(52,211,153,0.03);">
+                  <td>busqueda cancagua</td>
+                  <td><span class="tag green">Activo</span></td>
+                  <td class="num">$396.854</td>
+                  <td class="num">7.295</td>
+                  <td class="num best">41.3%</td>
+                  <td class="num best">807</td>
+                </tr>
+                <tr>
+                  <td>busqueda termas</td>
+                  <td><span class="tag green">Activo</span></td>
+                  <td class="num">$1.012.202</td>
+                  <td class="num">5.889</td>
+                  <td class="num">11.0%</td>
+                  <td class="num">501</td>
+                </tr>
+                <tr>
+                  <td>busqueda chile</td>
+                  <td><span class="tag green">Activo</span></td>
+                  <td class="num">$180.192</td>
+                  <td class="num">1.423</td>
+                  <td class="num">15.9%</td>
+                  <td class="num">124</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="chart-card">
+          <h3>Conversiones por campaña</h3>
+          <div class="chart-container"><canvas id="chartGadsCampaigns"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <h3>CTR por campaña (%)</h3>
+          <div class="chart-container"><canvas id="chartGadsCampaignCtr"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Google Ads Analysis -->
+    <div class="section">
+      <div class="analysis-box">
+        <h3>Resultados Google Ads — Crecimiento excepcional</h3>
+        <ul>
+          <li><strong>CTR promedio de 15.5%</strong> — El benchmark de la industria es 3–5%. Cancagua está 3x por encima del promedio, lo que indica que los anuncios son altamente relevantes para quien busca activamente. <span class="tag green">Sobresaliente</span></li>
+          <li><strong>"busqueda cancagua" con CTR de 41.3%</strong> — Casi 4 de cada 10 personas que ven el anuncio hacen clic. Esto refleja un branding muy sólido: la gente ya conoce y busca específicamente Cancagua. <span class="tag green">Branding excelente</span></li>
+          <li><strong>Conversiones en crecimiento exponencial:</strong> de 9 en Marzo 2025 a 603 en Febrero 2026. En menos de un año las conversiones se multiplicaron por 67x. <span class="tag green">↑ 67x crecimiento</span></li>
+          <li><strong>807 conversiones de "busqueda cancagua"</strong> — La campaña de marca es la más eficiente en conversiones y tiene el CTR más alto. Un activo invaluable para capturar demanda ya generada. <span class="tag purple">Top performer</span></li>
+          <li><strong>62.884 clicks totales</strong> — Son más de 62 mil personas que buscaron activamente termas o Cancagua y llegaron al sitio web. Tráfico de altísima intención de compra. <span class="tag green">Alto volumen</span></li>
+        </ul>
+      </div>
+
+      <div class="analysis-box" style="margin-top:16px;">
+        <h3>Oportunidades de Crecimiento — Google Ads</h3>
+        <ul>
+          <li><strong>1. Expandir keywords de búsqueda</strong> — Agregar términos relacionados como "termas en Chile", "termas sur de Chile", "termas con alojamiento", "planes termas semana santa", etc. Hay búsquedas no capturadas con alta intención. <span class="tag blue">Expansión</span></li>
+          <li><strong>2. Crear campaña de remarketing</strong> — Configurar audiencias de remarketing para re-impactar a los 62.884 usuarios que ya visitaron el sitio pero no convirtieron. El costo es mucho más bajo que captar usuarios nuevos. <span class="tag purple">Alta prioridad</span></li>
+          <li><strong>3. Performance Max (PMax)</strong> — Complementar las campañas de búsqueda con una campaña PMax que utilice el inventario completo de Google (YouTube, Display, Shopping, Gmail). Con los assets creativos de Cancagua, el potencial es enorme. <span class="tag green">Escalar</span></li>
+          <li><strong>4. Expandir "busqueda termas" (mayor inversión)</strong> — Con $1M invertido y 501 conversiones, esta campaña tiene la mayor inversión. Optimizar keywords y agregar variaciones estacionales ("termas otoño", "termas invierno Chile"). <span class="tag green">Optimizar</span></li>
+          <li><strong>5. Campaña de Semana Santa + Día de la Madre</strong> — Temporadas clave que se acercan. Crear campañas estacionales específicas con texto de anuncio y landing page orientada a cada momento. <span class="tag blue">Próximas fechas clave</span></li>
+        </ul>
+      </div>
+    </div>
+
+  </div><!-- /googleSection -->
+
+  <div class="footer">
+    <a href="../" style="color:#5a5e6e;text-decoration:none;">GoPoint Agency</a> · Reporte Cancagua · Marzo 2026
+  </div>
+
+<script>
+  // ─── Meta Ads Data ─────────────────────────────────────────
+  const metaMonths  = ['Mar 25','Abr 25','May 25','Jun 25','Jul 25','Ago 25','Sep 25','Oct 25','Nov 25','Dic 25','Ene 26','Feb 26','Mar 26'];
+  const metaSpend   = [224072,270980,344690,193803,265713,274693,314998,411193,286730,507687,929618,1552054,1068183];
+  const metaRoas    = [0,0,0,0,0,0,0,0,5.12,21.75,19.05,22.68,10.96];
+  const metaPurchases = [0,0,0,0,0,0,0,0,21,121,179,323,122];
+
+  const chartDefaults = {
+    responsive: true,
+    maintainAspectRatio: false,
+    animation: { duration: 400 },
+    plugins: {
+      legend: { labels: { color: '#8b8fa3', font: { size: 12, family: 'Poppins' } } },
+    },
+    scales: {
+      x: { ticks: { color: '#6b7080', font: { size: 11 } }, grid: { color: 'rgba(255,255,255,0.03)' } },
+      y: { ticks: { color: '#6b7080' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+    }
+  };
+
+  // ─── Chart 1: Gasto + ROAS mensual ──────────────────────────
+  new Chart(document.getElementById('chartMetaMonthly'), {
+    type: 'bar',
+    data: {
+      labels: metaMonths,
+      datasets: [
+        {
+          label: 'Gasto (CLP)',
+          data: metaSpend,
+          backgroundColor: metaMonths.map((_, i) => {
+            if (i >= 8) return 'rgba(252,80,0,0.75)'; // con compras
+            return 'rgba(99,102,241,0.4)'; // sin compras
+          }),
+          borderRadius: 4,
+          yAxisID: 'y',
+          order: 2,
+        },
+        {
+          label: 'ROAS (x)',
+          data: metaRoas,
+          type: 'line',
+          borderColor: '#34d399',
+          backgroundColor: 'rgba(52,211,153,0.1)',
+          fill: true,
+          tension: 0.3,
+          pointRadius: metaRoas.map(v => v > 0 ? 6 : 3),
+          pointBackgroundColor: metaRoas.map(v => v > 0 ? '#34d399' : 'rgba(52,211,153,0.3)'),
+          yAxisID: 'y1',
+          order: 1,
+          borderWidth: 2.5,
+        }
+      ]
+    },
+    options: {
+      ...chartDefaults,
+      scales: {
+        x: chartDefaults.scales.x,
+        y: {
+          ...chartDefaults.scales.y,
+          position: 'left',
+          title: { display: true, text: 'Gasto (CLP)', color: '#6b7080' },
+        },
+        y1: {
+          ...chartDefaults.scales.y,
+          position: 'right',
+          title: { display: true, text: 'ROAS (x)', color: '#34d399' },
+          grid: { drawOnChartArea: false },
+          min: 0,
+          max: 30,
+        }
+      }
+    }
+  });
+
+  // ─── Chart 2: ROAS mensual ───────────────────────────────────
+  new Chart(document.getElementById('chartRoas'), {
+    type: 'bar',
+    data: {
+      labels: metaMonths,
+      datasets: [{
+        label: 'ROAS (x)',
+        data: metaRoas,
+        backgroundColor: metaRoas.map(v => {
+          if (v === 0) return 'rgba(99,102,241,0.25)';
+          if (v >= 20) return 'rgba(52,211,153,0.75)';
+          if (v >= 10) return 'rgba(251,191,36,0.65)';
+          return 'rgba(248,113,113,0.55)';
+        }),
+        borderRadius: 4,
+      }]
+    },
+    options: {
+      ...chartDefaults,
+      plugins: {
+        ...chartDefaults.plugins,
+        annotation: {},
+      }
+    }
+  });
+
+  // ─── Chart 3: Purchases mensual ─────────────────────────────
+  new Chart(document.getElementById('chartPurchases'), {
+    type: 'line',
+    data: {
+      labels: metaMonths,
+      datasets: [{
+        label: 'Purchases',
+        data: metaPurchases,
+        borderColor: '#fc5000',
+        backgroundColor: 'rgba(252,80,0,0.1)',
+        fill: true,
+        tension: 0.3,
+        pointRadius: metaPurchases.map(v => v > 0 ? 6 : 3),
+        pointBackgroundColor: '#fc5000',
+        borderWidth: 2.5,
+      }]
+    },
+    options: chartDefaults,
+  });
+
+  // ─── Chart 4: Campaign ROAS bar ─────────────────────────────
+  const campNames = ['RT amor ventas', 'ventas chile', 'ventas lagos rios', 'RT Marzo mujeres', 'Marzo mujeres', 'empresa', 'inter prueba', 'RT inter videos'];
+  const campRoas  = [39.49, 24.46, 21.50, 20.03, 8.49, 7.04, 1.57, 0.43];
+  new Chart(document.getElementById('chartCampaignRoas'), {
+    type: 'bar',
+    data: {
+      labels: campNames,
+      datasets: [{
+        label: 'ROAS (x)',
+        data: campRoas,
+        backgroundColor: campRoas.map(v => {
+          if (v >= 20) return 'rgba(52,211,153,0.7)';
+          if (v >= 7) return 'rgba(251,191,36,0.65)';
+          if (v >= 1) return 'rgba(248,113,113,0.5)';
+          return 'rgba(107,112,128,0.4)';
+        }),
+        borderRadius: 4,
+      }]
+    },
+    options: {
+      ...chartDefaults,
+      indexAxis: 'y',
+    }
+  });
+
+  // ─── Chart 5: Campaign Spend Donut ──────────────────────────
+  new Chart(document.getElementById('chartCampaignSpend'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Ventas RT Chile', 'ventas chile', 'RT inter videos', 'inter prueba', 'ventas lagos rios', 'inter chile ext.', 'Resto'],
+      datasets: [{
+        data: [1399638, 1311762, 655219, 567785, 806612, 504000, 400000],
+        backgroundColor: ['#6366f1','#fc5000','#f87171','#fbbf24','#34d399','#60a5fa','#a78bfa'],
+        borderWidth: 0,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: '65%',
+      plugins: {
+        legend: {
+          position: 'right',
+          labels: { color: '#8b8fa3', font: { size: 10, family: 'Poppins' }, padding: 10, usePointStyle: true, pointStyleWidth: 7 }
+        }
+      }
+    }
+  });
+
+  // ─── Platform tab switching ──────────────────────────────────
+  function switchPlatform(platform, el) {
+    document.querySelectorAll('.platform-tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById('metaSection').classList.toggle('active', platform === 'meta');
+    document.getElementById('googleSection').classList.toggle('active', platform === 'google');
+    if (platform === 'google' && !window._gadsBuilt) {
+      buildGadsCharts();
+      window._gadsBuilt = true;
+    }
+  }
+
+  // ─── Google Ads Charts ───────────────────────────────────────
+  function buildGadsCharts() {
+    const gadsMonths = ['Mar 25','Abr 25','May 25','Jun 25','Jul 25','Ago 25','Sep 25','Oct 25','Nov 25','Dic 25','Ene 26','Feb 26','Mar 26'];
+    const gadsSpend  = [269108,284993,515992,461012,568839,472706,507668,507530,467871,517081,572231,530002,303929];
+    const gadsCtr    = [18.90,17.57,14.10,15.16,13.35,12.20,11.05,12.85,20.36,16.05,17.33,19.22,17.98];
+    const gadsConv   = [9,7,16,12,19,59,68,125,330,378,454,603,201];
+
+    const gOpts = {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: { duration: 400 },
+      plugins: { legend: { labels: { color: '#8b8fa3', font: { size: 12, family: 'Poppins' } } } },
+      scales: {
+        x: { ticks: { color: '#6b7080', font: { size: 11 } }, grid: { color: 'rgba(255,255,255,0.03)' } },
+        y: { ticks: { color: '#6b7080' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+      }
+    };
+
+    // Monthly: Spend + Conversions
+    new Chart(document.getElementById('chartGadsMonthly'), {
+      type: 'bar',
+      data: {
+        labels: gadsMonths,
+        datasets: [
+          {
+            label: 'Inversión (CLP)',
+            data: gadsSpend,
+            backgroundColor: gadsMonths.map((_, i) => i >= 8 ? 'rgba(66,133,244,0.7)' : 'rgba(66,133,244,0.35)'),
+            borderRadius: 4,
+            yAxisID: 'y',
+            order: 2,
+          },
+          {
+            label: 'Conversiones',
+            data: gadsConv,
+            type: 'line',
+            borderColor: '#34d399',
+            backgroundColor: 'transparent',
+            pointBackgroundColor: '#34d399',
+            pointRadius: 5,
+            tension: 0.3,
+            borderWidth: 2.5,
+            yAxisID: 'y1',
+            order: 1,
+          }
+        ]
+      },
+      options: {
+        ...gOpts,
+        scales: {
+          x: gOpts.scales.x,
+          y: { ...gOpts.scales.y, position: 'left', title: { display: true, text: 'Inversión (CLP)', color: '#6b7080' } },
+          y1: { ...gOpts.scales.y, position: 'right', grid: { display: false }, title: { display: true, text: 'Conversiones', color: '#34d399' } }
+        }
+      }
+    });
+
+    // CTR monthly
+    new Chart(document.getElementById('chartGadsCtr'), {
+      type: 'line',
+      data: {
+        labels: gadsMonths,
+        datasets: [{
+          label: 'CTR (%)',
+          data: gadsCtr,
+          borderColor: '#60a5fa',
+          backgroundColor: 'rgba(96,165,250,0.1)',
+          fill: true,
+          tension: 0.3,
+          pointRadius: 5,
+          pointBackgroundColor: '#60a5fa',
+          borderWidth: 2.5,
+        },
+        {
+          label: 'Benchmark industria (3-5%)',
+          data: new Array(gadsMonths.length).fill(5),
+          borderColor: 'rgba(248,113,113,0.4)',
+          borderDash: [5,5],
+          pointRadius: 0,
+          borderWidth: 1.5,
+        }]
+      },
+      options: gOpts,
+    });
+
+    // Conversions monthly
+    new Chart(document.getElementById('chartGadsConversions'), {
+      type: 'bar',
+      data: {
+        labels: gadsMonths,
+        datasets: [{
+          label: 'Conversiones',
+          data: gadsConv,
+          backgroundColor: gadsConv.map(v => {
+            if (v >= 300) return 'rgba(52,211,153,0.75)';
+            if (v >= 100) return 'rgba(251,191,36,0.65)';
+            if (v >= 20) return 'rgba(96,165,250,0.6)';
+            return 'rgba(99,102,241,0.4)';
+          }),
+          borderRadius: 4,
+        }]
+      },
+      options: gOpts,
+    });
+
+    // Campaigns conversions
+    new Chart(document.getElementById('chartGadsCampaigns'), {
+      type: 'doughnut',
+      data: {
+        labels: ['busqueda cancagua (807)', 'busqueda termas (501)', 'busqueda chile (124)'],
+        datasets: [{
+          data: [807, 501, 124],
+          backgroundColor: ['#4285f4','#34d399','#fbbf24'],
+          borderWidth: 0,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '60%',
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: { color: '#8b8fa3', font: { size: 11, family: 'Poppins' }, padding: 12, usePointStyle: true }
+          }
+        }
+      }
+    });
+
+    // Campaign CTR
+    new Chart(document.getElementById('chartGadsCampaignCtr'), {
+      type: 'bar',
+      data: {
+        labels: ['busqueda cancagua', 'busqueda chile', 'busqueda termas'],
+        datasets: [{
+          label: 'CTR (%)',
+          data: [41.3, 15.9, 11.0],
+          backgroundColor: ['rgba(52,211,153,0.75)', 'rgba(96,165,250,0.65)', 'rgba(251,191,36,0.65)'],
+          borderRadius: 6,
+        }]
+      },
+      options: gOpts,
+    });
+  }
+</script>
+
+</body>
+</html>
