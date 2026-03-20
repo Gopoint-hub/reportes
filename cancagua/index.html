@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Reporte — Cancagua</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
@@ -305,6 +306,23 @@
       🚀 <strong>Punto de inflexión — Noviembre 2025:</strong> Primer mes con compras registradas (21 purchases, ROAS 5.12x). Desde entonces el crecimiento ha sido exponencial: en 4 meses pasamos de 0 a 766 compras totales y ROAS promedio de 14.7x.
     </div>
 
+    <!-- ROAS Spotlight -->
+    <div class="section" style="padding-bottom:0;">
+      <div class="section-title"><div class="dot" style="background:#34d399;"></div> ROAS Spotlight — Retorno por cada peso invertido</div>
+      <div class="chart-grid">
+        <div class="chart-card full">
+          <h3>ROAS mensual (x) · Nov 2025 – Mar 2026 — <span style="color:#34d399;font-weight:600;">Peak 22.68x en Feb 2026</span></h3>
+          <div class="chart-container tall"><canvas id="chartRoasSpotlight"></canvas></div>
+          <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:14px;font-size:12px;">
+            <span style="color:#34d399;">● ≥ 20x — Excelente</span>
+            <span style="color:#fbbf24;">● ≥ 10x — Bueno</span>
+            <span style="color:#f87171;">● &lt; 10x — En desarrollo</span>
+            <span style="color:#6366f1;opacity:0.5;">● Sin compras</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Monthly Chart -->
     <div class="section">
       <div class="section-title"><div class="dot"></div> Evolución Mensual — Gasto vs ROAS</div>
@@ -465,11 +483,12 @@
   <!-- ═══ GOOGLE ADS SECTION ═══ -->
   <div id="googleSection" class="platform-section">
 
-    <div class="gads-kpis">
+    <div class="gads-kpis" style="grid-template-columns:repeat(5,1fr);">
       <div class="gads-kpi accent"><div class="value">$5.98M</div><div class="label">Inversión total (Mar 25–Mar 26)</div></div>
-      <div class="gads-kpi blue"><div class="value">62.884</div><div class="label">Clicks totales</div></div>
-      <div class="gads-kpi green"><div class="value">15.5%</div><div class="label">CTR promedio</div></div>
       <div class="gads-kpi amber"><div class="value">2.281</div><div class="label">Conversiones totales</div></div>
+      <div class="gads-kpi blue"><div class="value">15.5%</div><div class="label">CTR promedio</div></div>
+      <div class="gads-kpi green"><div class="value">$2.622</div><div class="label">CPA promedio (CLP)</div></div>
+      <div class="gads-kpi" style="background:#1a1d27;border:1px solid rgba(52,211,153,0.2);"><div class="value" style="color:#34d399;font-size:1.1rem;">↓ 97%</div><div class="label">reducción en CPA</div></div>
     </div>
 
     <!-- Monthly Trend -->
@@ -487,6 +506,22 @@
         <div class="chart-card">
           <h3>Conversiones mensuales — Crecimiento exponencial</h3>
           <div class="chart-container"><canvas id="chartGadsConversions"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CPA Trend + Estimated ROAS -->
+    <div class="section" style="padding-top:0;">
+      <div class="section-title"><div class="dot" style="background:#34d399;"></div> Costo por Conversión — Mejora Histórica</div>
+      <div class="chart-grid">
+        <div class="chart-card full">
+          <h3>CPA mensual (CLP por conversión) — <span style="color:#34d399;font-weight:600;">↓ 97% reducción: de $40.713 → $879 en 12 meses</span></h3>
+          <div class="chart-container tall"><canvas id="chartGadsCpa"></canvas></div>
+        </div>
+        <div class="chart-card full">
+          <h3>ROAS estimado mensual (Nov 25–Mar 26) — <span style="color:#fbbf24;font-weight:600;">Basado en ticket promedio Meta ≈ $100K CLP</span></h3>
+          <div class="chart-container"><canvas id="chartGadsEstRoas"></canvas></div>
+          <p style="color:#5a5e6e;font-size:11px;margin-top:12px;line-height:1.5;">⚠️ <strong style="color:#6b7080;">ROAS estimado</strong> basado en ticket promedio Meta ($100K CLP). Los meses anteriores tienen menos conversiones registradas (tracking en desarrollo). Configurar valor de conversión en Google Ads para datos exactos.</p>
         </div>
       </div>
     </div>
@@ -699,6 +734,60 @@
     options: chartDefaults,
   });
 
+  // ─── ROAS Spotlight ─────────────────────────────────────────
+  new Chart(document.getElementById('chartRoasSpotlight'), {
+    type: 'bar',
+    plugins: [ChartDataLabels],
+    data: {
+      labels: metaMonths,
+      datasets: [{
+        label: 'ROAS (x)',
+        data: metaRoas,
+        backgroundColor: metaRoas.map(v => {
+          if (v === 0) return 'rgba(99,102,241,0.15)';
+          if (v >= 20) return 'rgba(52,211,153,0.82)';
+          if (v >= 10) return 'rgba(251,191,36,0.75)';
+          return 'rgba(248,113,113,0.65)';
+        }),
+        borderRadius: 8,
+        borderWidth: 0,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: { duration: 400 },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: ctx => ctx.raw > 0 ? `ROAS: ${ctx.raw.toFixed(2)}x` : 'Sin compras este mes',
+          }
+        },
+        datalabels: {
+          display: ctx => ctx.dataset.data[ctx.dataIndex] > 0,
+          color: '#fff',
+          anchor: 'center',
+          align: 'center',
+          font: { size: 15, weight: '700', family: 'Poppins' },
+          formatter: value => value.toFixed(1) + 'x',
+          textShadowColor: 'rgba(0,0,0,0.4)',
+          textShadowBlur: 4,
+        },
+      },
+      scales: {
+        x: { ticks: { color: '#8b8fa3', font: { size: 12, family: 'Poppins' } }, grid: { color: 'rgba(255,255,255,0.03)' } },
+        y: {
+          ticks: { color: '#6b7080', callback: v => v + 'x' },
+          grid: { color: 'rgba(255,255,255,0.05)' },
+          max: 26,
+          min: 0,
+          title: { display: true, text: 'ROAS (x)', color: '#6b7080' },
+        }
+      }
+    }
+  });
+
   // ─── Chart 4: Campaign ROAS bar ─────────────────────────────
   const campNames = ['RT amor ventas', 'ventas chile', 'ventas lagos rios', 'RT Marzo mujeres', 'Marzo mujeres', 'empresa', 'inter prueba', 'RT inter videos'];
   const campRoas  = [39.49, 24.46, 21.50, 20.03, 8.49, 7.04, 1.57, 0.43];
@@ -863,6 +952,94 @@
         }]
       },
       options: gOpts,
+    });
+
+    // CPA Trend
+    const gadsCpa = [29901, 40713, 32250, 38418, 29939, 8012, 7466, 4060, 1418, 1368, 1260, 879, 1512];
+    new Chart(document.getElementById('chartGadsCpa'), {
+      type: 'line',
+      data: {
+        labels: gadsMonths,
+        datasets: [{
+          label: 'CPA (CLP/conversión)',
+          data: gadsCpa,
+          borderColor: '#34d399',
+          backgroundColor: 'rgba(52,211,153,0.07)',
+          fill: true,
+          tension: 0.35,
+          pointRadius: gadsCpa.map(v => v <= 2000 ? 8 : 5),
+          pointBackgroundColor: gadsCpa.map(v => v <= 2000 ? '#34d399' : v <= 10000 ? '#fbbf24' : '#f87171'),
+          pointBorderColor: 'transparent',
+          pointBorderWidth: 0,
+          borderWidth: 2.5,
+        }]
+      },
+      options: {
+        ...gOpts,
+        plugins: {
+          ...gOpts.plugins,
+          tooltip: {
+            callbacks: {
+              label: ctx => `CPA: $${ctx.raw.toLocaleString('es-CL')} CLP`
+            }
+          }
+        },
+        scales: {
+          x: gOpts.scales.x,
+          y: {
+            ...gOpts.scales.y,
+            title: { display: true, text: 'CLP por conversión', color: '#6b7080' },
+            ticks: {
+              color: '#6b7080',
+              callback: v => '$' + (v >= 1000 ? (v/1000).toFixed(0)+'K' : v)
+            }
+          }
+        }
+      }
+    });
+
+    // Estimated ROAS - Google Ads (Nov 25 to Mar 26)
+    const estRoasMonths = ['Nov 25', 'Dic 25', 'Ene 26', 'Feb 26', 'Mar 26'];
+    const estRoasData   = [70.5, 73.1, 79.4, 113.8, 66.1];
+    new Chart(document.getElementById('chartGadsEstRoas'), {
+      type: 'bar',
+      plugins: [ChartDataLabels],
+      data: {
+        labels: estRoasMonths,
+        datasets: [{
+          label: 'ROAS estimado (x)',
+          data: estRoasData,
+          backgroundColor: estRoasData.map(v => v >= 100 ? 'rgba(52,211,153,0.82)' : 'rgba(251,191,36,0.72)'),
+          borderRadius: 8,
+          borderWidth: 0,
+        }]
+      },
+      options: {
+        ...gOpts,
+        plugins: {
+          ...gOpts.plugins,
+          datalabels: {
+            display: true,
+            color: '#fff',
+            anchor: 'center',
+            align: 'center',
+            font: { size: 16, weight: '700', family: 'Poppins' },
+            formatter: value => value.toFixed(1) + 'x',
+            textShadowColor: 'rgba(0,0,0,0.4)',
+            textShadowBlur: 4,
+          },
+        },
+        scales: {
+          x: gOpts.scales.x,
+          y: {
+            ...gOpts.scales.y,
+            title: { display: true, text: 'ROAS estimado (x)', color: '#6b7080' },
+            ticks: { color: '#6b7080', callback: v => v + 'x' },
+            min: 0,
+            max: 130,
+          }
+        }
+      }
     });
 
     // Campaigns conversions
