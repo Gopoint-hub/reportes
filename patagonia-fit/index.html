@@ -238,9 +238,48 @@
 
     @media (max-width: 900px) {
       .chart-grid { grid-template-columns: 1fr; }
-      .kpi-row { grid-template-columns: repeat(2, 1fr); }
-      .section { padding: 24px 20px; }
-      .header { padding: 28px 20px; }
+      .kpi-row { grid-template-columns: repeat(2, 1fr); gap: 10px; padding: 20px 16px 0; }
+      .section { padding: 20px 16px; }
+      .header { padding: 24px 16px; }
+      .header h1 { font-size: 22px; }
+      .header .subtitle { font-size: 12px; }
+      .kpi-card { padding: 14px 16px; }
+      .kpi-card .value { font-size: 22px; }
+      .kpi-card .label { font-size: 11px; }
+      .kpi-card .change { font-size: 12px; }
+      .chart-card { padding: 16px; }
+      .chart-container { height: 250px; }
+      .chart-container.tall { height: 280px; }
+      .analysis-box { padding: 20px 16px; }
+      .analysis-box h3 { font-size: 14px; }
+      .analysis-box li { font-size: 13px; padding: 8px 0; }
+      .data-table { font-size: 11px; }
+      .data-table th { font-size: 10px; padding: 8px 6px; }
+      .data-table td { padding: 8px 6px; }
+      .footer { padding: 20px 16px; }
+      .tabs { width: 100%; justify-content: center; }
+      .tab-btn { padding: 6px 14px; font-size: 12px; }
+      .gads-kpis { grid-template-columns: repeat(2, 1fr); gap: 8px; padding: 20px 16px 0; }
+      .gads-kpi { padding: 12px 8px; }
+      .gads-kpi .value { font-size: 1.1rem; }
+      .gads-kpi .label { font-size: 0.6rem; }
+      .section-title { font-size: 15px; }
+    }
+    @media (max-width: 480px) {
+      .kpi-row { grid-template-columns: 1fr 1fr; gap: 8px; padding: 16px 12px 0; }
+      .section { padding: 16px 12px; }
+      .header { padding: 20px 12px; padding-top: 40px; }
+      .header h1 { font-size: 19px; }
+      .kpi-card .value { font-size: 20px; }
+      .chart-container { height: 220px; }
+      .chart-container.tall { height: 250px; }
+      .analysis-box { padding: 16px 12px; }
+      .analysis-box li { font-size: 12px; line-height: 1.5; }
+      .tag { font-size: 10px; padding: 1px 6px; }
+      .gads-kpis { grid-template-columns: repeat(2, 1fr); gap: 6px; padding: 16px 12px 0; }
+      .gads-kpi .value { font-size: 1rem; }
+      .platform-tab { padding: 0.4rem 1rem; font-size: 0.75rem; }
+      .data-table th, .data-table td { padding: 6px 4px; white-space: nowrap; }
     }
   </style>
 </head>
@@ -254,7 +293,7 @@
   </div>
 
   <!-- Platform Tabs -->
-  <div style="display:flex;justify-content:center;gap:0.4rem;padding:1rem;background:rgba(255,255,255,0.02);border-bottom:1px solid rgba(255,255,255,0.05);">
+  <div style="display:flex;justify-content:center;gap:0.4rem;padding:0.8rem 1rem;background:rgba(255,255,255,0.02);border-bottom:1px solid rgba(255,255,255,0.05);position:sticky;top:0;z-index:10;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);">
     <button class="platform-tab active" onclick="switchPlatform('meta',this)">Meta Ads</button>
     <button class="platform-tab" onclick="switchPlatform('google',this)">Google Ads</button>
   </div>
